@@ -53,6 +53,14 @@ module Lita
           response
         end
 
+        def users_list(params: {})
+          call_paginated_api(method: 'users.list', params: params, result_field: 'members')
+        end
+
+        def users_profile_get(user)
+          call_api("users.profile.get", user: user)
+        end
+
         def conversations_list(types: ["public_channel"], params: {})
           params.merge!({
             types: types.join(',')
@@ -145,15 +153,18 @@ module Lita
 
         def rtm_start
           Lita.logger.debug("Starting `rtm_start` method")
-          response_data = call_api("rtm.start")
+          response_data = call_app_api("apps.connections.open")
           Lita.logger.debug("Started building TeamData")
+
+          ws_url = response_data["url"]
+
           team_data = TeamData.new(
-            SlackIM.from_data_array(response_data["ims"]),
-            SlackUser.from_data(response_data["self"]),
-            SlackUser.from_data_array(response_data["users"]),
-            SlackChannel.from_data_array(response_data["channels"]) +
-              SlackChannel.from_data_array(response_data["groups"]),
-            response_data["url"],
+            SlackIM.from_data_array(im_list["ims"]),
+            SlackUser.from_data(users_profile_get(@config.self_id)["profile"]),
+            SlackUser.from_data_array(users_list["members"]),
+            SlackChannel.from_data_array(channels_list["channels"]) +
+              SlackChannel.from_data_array(groups_list["groups"]),
+            ws_url,
           )
           Lita.logger.debug("Finished building TeamData")
           Lita.logger.debug("Finishing method `rtm_start`")
@@ -167,14 +178,29 @@ module Lita
         attr_reader :post_message_config
 
         def call_api(method, post_data = {})
-          Lita.logger.debug("Starting request to Slack API with rtm.start")
+          Lita.logger.debug("Starting request to Slack API")
           response = connection.post(
             "https://slack.com/api/#{method}",
             { token: config.token }.merge(post_data)
           )
-          Lita.logger.debug("Finished request to Slack API rtm.start")
+          Lita.logger.debug("Finished request to Slack API")
           data = parse_response(response, method)
-          Lita.logger.debug("Finished parsing rtm.start response")
+          Lita.logger.debug("Finished parsing response")
+          raise "Slack API call to #{method} returned an error: #{data["error"]}." if data["error"]
+
+          data
+        end
+
+        def call_app_api(method, post_data = {})
+          Lita.logger.debug("Starting request to Slack API with App Token")
+          response = connection.post(
+              "https://slack.com/api/#{method}",
+              post_data,
+              {"Authorization": "Bearer #{config.app_token}"}
+          )
+          Lita.logger.debug("Finished request to Slack API App Token")
+          data = parse_response(response, method)
+          Lita.logger.debug("Finished parsing response")
           raise "Slack API call to #{method} returned an error: #{data["error"]}." if data["error"]
 
           data

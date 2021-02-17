@@ -6,8 +6,8 @@ module Lita
         def initialize(robot, robot_id, data)
           @robot = robot
           @robot_id = robot_id
-          @data = data
-          @type = data["type"]
+          @data = data["payload"]["event"]
+          @type = data["payload"]["event"]["type"]
         end
 
         def handle
