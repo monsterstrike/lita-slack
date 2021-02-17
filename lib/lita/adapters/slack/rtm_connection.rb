@@ -128,7 +128,7 @@ module Lita
           EventLoop.defer do
             case data["type"]
             when "events_api"
-              MessageHandler.new(robot, robot_id, data).handle
+              MessageHandler.new(robot, robot_id, data["payload"]["event"]).handle
               ack(data["envelope_id"])
               log.debug("Acknowledging #{data["envelope_id"]}")
             end

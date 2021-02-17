@@ -112,21 +112,6 @@ describe Lita::Adapters::Slack, lita: true do
       Lita::Adapters::Slack::SlackSource.new(room: 'C024BE91L', user: user, private_message: true)
     end
 
-    describe "via the Web API" do
-      let(:api) { instance_double('Lita::Adapters::Slack::API') }
-
-      before do
-        allow(Lita::Adapters::Slack::API).to receive(:new).with(subject.config).and_return(api)
-      end
-
-      it "does not send via the RTM api" do
-        expect(rtm_connection).to_not receive(:send_messages)
-        expect(api).to receive(:send_messages).with(room_source.room, ['foo'])
-
-        subject.send_messages(room_source, ['foo'])
-      end
-    end
-
     describe "with an ellipsis" do
       let(:room_source) { Lita::Adapters::Slack::SlackSource.new(room: 'C024BE91L', extensions: { timestamp: "12345" } ) }
       let(:api) { instance_double('Lita::Adapters::Slack::API') }

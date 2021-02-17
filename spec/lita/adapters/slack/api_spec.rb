@@ -5,10 +5,14 @@ describe Lita::Adapters::Slack::API do
 
   let(:http_status) { 200 }
   let(:token) { 'abcd-1234567890-hWYd21AmMH2UHAkx29vb5c1Y' }
+  let(:app_token) { 'apptoken' }
   let(:config) { Lita::Adapters::Slack.configuration_builder.build }
+  let(:self_id) { "self_id" }
 
   before do
     config.token = token
+    config.app_token = app_token
+    config.self_id = self_id
   end
 
   describe "#im_open" do
@@ -796,9 +800,19 @@ describe Lita::Adapters::Slack::API do
 
   describe "#rtm_start" do
     let(:http_status) { 200 }
+
+    before do
+      allow(subject).to receive(:im_list) { {"ims" => [{ "id" => 'D024BFF1M' }]} }
+      allow(subject).to receive(:users_profile_get).with(self_id) { {"profile" => { "id" => self_id }} }
+      allow(subject).to receive(:users_list) { {"members" => [{ "id" => 'U023BECGF' }]} }
+      allow(subject).to receive(:channels_list) { {"channels" => [{ "id" => 'D024BFF1M' }]} }
+      allow(subject).to receive(:groups_list) { {"groups" => [{ "id" => 'G024BFF1M' }]} }
+    end
+
+
     let(:stubs) do
       Faraday::Adapter::Test::Stubs.new do |stub|
-        stub.post('https://slack.com/api/rtm.start', token: token) do
+        stub.post('https://slack.com/api/apps.connections.open', {}) do
           [http_status, {}, http_response]
         end
       end
@@ -809,18 +823,13 @@ describe Lita::Adapters::Slack::API do
         MultiJson.dump({
           ok: true,
           url: 'wss://example.com/',
-          users: [{ id: 'U023BECGF' }],
-          ims: [{ id: 'D024BFF1M' }],
-          self: { id: 'U12345678' },
-          channels: [{ id: 'C1234567890' }],
-          groups: [{ id: 'G0987654321' }],
         })
       end
 
       it "has data on the bot user" do
         response = subject.rtm_start
 
-        expect(response.self.id).to eq('U12345678')
+        expect(response.self.id).to eq(self_id)
       end
 
       it "has an array of IMs" do
@@ -839,6 +848,32 @@ describe Lita::Adapters::Slack::API do
         response = subject.rtm_start
 
         expect(response.websocket_url).to eq('wss://example.com/')
+      end
+    end
+  end
+
+  describe "#users_list" do
+    let(:http_status) { 200 }
+    let(:stubs) do
+      Faraday::Adapter::Test::Stubs.new do |stub|
+        stub.post('https://slack.com/api/users.list', token: token) do
+          [http_status, {}, http_response]
+        end
+      end
+    end
+
+    describe "with a successful response" do
+      let(:http_response) do
+        MultiJson.dump({
+                           ok: true,
+                           members: [{ id: 'U023BECGF', name: 'spengler', real_name: 'Egon Spengler' }],
+                       })
+      end
+
+      it "has an array of members" do
+        response = subject.users_list
+
+        expect(response["members"][0]["name"]).to eq 'spengler'
       end
     end
   end
@@ -969,7 +1004,7 @@ describe Lita::Adapters::Slack::API do
           expect(response['channels'][1]['id']).to eq(channel_id_2)
         end
       end
-  
+
       describe "with a Slack error" do
         let(:http_response) do
           MultiJson.dump({
