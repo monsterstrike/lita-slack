@@ -126,12 +126,12 @@ module Lita
           data = MultiJson.load(event.data)
 
           EventLoop.defer do
+            return if data["retry_attempt"].to_i > 0
             case data["type"]
             when "events_api"
-              log.debug("Invoked MessageHandler #{data}")
-              MessageHandler.new(robot, robot_id, data["payload"]["event"]).handle
-              ack(data["envelope_id"])
               log.debug("Acknowledging #{data["envelope_id"]} #{data}")
+              ack(data["envelope_id"])
+              MessageHandler.new(robot, robot_id, data["payload"]["event"]).handle
             end
           end
         end
