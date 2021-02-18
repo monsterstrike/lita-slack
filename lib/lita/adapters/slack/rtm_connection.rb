@@ -129,7 +129,7 @@ module Lita
             return if data["retry_attempt"].to_i > 0
             case data["type"]
             when "events_api"
-              log.debug("Acknowledging #{data["envelope_id"]} #{data}")
+              log.debug("Acknowledging #{data["envelope_id"]}")
               ack(data["envelope_id"])
               MessageHandler.new(robot, robot_id, data["payload"]["event"]).handle
             end
