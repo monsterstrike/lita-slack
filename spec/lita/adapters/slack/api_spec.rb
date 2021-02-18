@@ -12,7 +12,6 @@ describe Lita::Adapters::Slack::API do
   before do
     config.token = token
     config.app_token = app_token
-    config.self_id = self_id
   end
 
   describe "#im_open" do

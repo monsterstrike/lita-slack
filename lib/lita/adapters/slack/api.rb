@@ -61,6 +61,10 @@ module Lita
           call_api("users.profile.get", user: user)
         end
 
+        def auth_test
+          call_api("auth.test")
+        end
+
         def conversations_list(types: ["public_channel"], params: {})
           params.merge!({
             types: types.join(',')
@@ -160,12 +164,13 @@ module Lita
 
           team_data = TeamData.new(
             SlackIM.from_data_array(im_list["ims"]),
-            SlackUser.from_data(users_profile_get(@config.self_id)["profile"]),
+            SlackUser.from_data(get_identity),
             SlackUser.from_data_array(users_list["members"]),
             SlackChannel.from_data_array(channels_list["channels"]) +
               SlackChannel.from_data_array(groups_list["groups"]),
             ws_url,
           )
+
           Lita.logger.debug("Finished building TeamData")
           Lita.logger.debug("Finishing method `rtm_start`")
           team_data
@@ -176,6 +181,13 @@ module Lita
         attr_reader :stubs
         attr_reader :config
         attr_reader :post_message_config
+
+        def get_identity
+          user_id = auth_test["user_id"]
+          profile = users_profile_get(user_id)["profile"]
+          profile["id"] = user_id
+          profile
+        end
 
         def call_api(method, post_data = {})
           Lita.logger.debug("Starting request to Slack API")

@@ -42,7 +42,6 @@ Lita.configure do |config|
 
   config.adapters.slack.token = "abcd-1234567890-hWYd21AmMH2UHAkx29vb5c1Y"
   config.adapters.slack.app_token = "xapp-1234567890-hWYd21AmMH2UHAkx29vb5c1Y"
-  config.adapters.slack.self_id = "B012ABCDE"
 
   config.adapters.slack.link_names = true
   config.adapters.slack.parse = "full"
