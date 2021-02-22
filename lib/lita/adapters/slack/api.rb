@@ -219,14 +219,23 @@ module Lita
         end
 
         def connection
+          retry_options = {
+              retry_statuses: [429],
+              methods: %i[get post]
+          }
           if stubs
-            Faraday.new { |faraday| faraday.adapter(:test, stubs) }
+            Faraday.new do |faraday|
+              faraday.request :retry, retry_options
+              faraday.adapter(:test, stubs)
+            end
           else
             options = {}
             unless config.proxy.nil?
               options = { proxy: config.proxy }
             end
-            Faraday.new(options)
+            Faraday.new(options) do |faraday|
+              faraday.request :retry, retry_options
+            end
           end
         end
 
