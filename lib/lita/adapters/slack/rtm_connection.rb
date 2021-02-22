@@ -124,9 +124,9 @@ module Lita
 
         def receive_message(event)
           data = MultiJson.load(event.data)
+          return if data["retry_attempt"].to_i > 0
 
           EventLoop.defer do
-            return if data["retry_attempt"].to_i > 0
             case data["type"]
             when "events_api"
               log.debug("Acknowledging #{data["envelope_id"]}")
