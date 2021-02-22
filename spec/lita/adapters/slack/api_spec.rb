@@ -1018,6 +1018,28 @@ describe Lita::Adapters::Slack::API do
             "Slack API call to conversations.list returned an error: invalid_auth."
           )
         end
+
+        context "ratelimited" do
+          let(:calls) { [] }
+          let(:http_status) { 429 }
+          let(:http_response) { MultiJson.dump({ok: false, error: "ratelimited"}) }
+          let(:stubs) do
+            Faraday::Adapter::Test::Stubs.new do |stub|
+              stub.post('https://slack.com/api/conversations.list', token: token, limit: 1, types: "public_channel") do |env|
+                calls << env.dup
+                [http_status, {}, http_response]
+              end
+            end
+          end
+
+          # Faraday retries max 2 times
+          it "raises RuntimeError after retry" do
+            expect { subject.conversations_list(params: { limit: 1 })}.to raise_error(
+              "Slack API call to conversations.list returned an error: ratelimited."
+            )
+            expect(calls.size).to eq(3)
+          end
+        end
       end
   
       describe "with an HTTP error" do
