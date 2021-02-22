@@ -801,6 +801,7 @@ describe Lita::Adapters::Slack::API do
     let(:http_status) { 200 }
 
     before do
+      allow(subject).to receive(:auth_test) { {"user_id" => self_id} }
       allow(subject).to receive(:im_list) { {"ims" => [{ "id" => 'D024BFF1M' }]} }
       allow(subject).to receive(:users_profile_get).with(self_id) { {"profile" => { "id" => self_id }} }
       allow(subject).to receive(:users_list) { {"members" => [{ "id" => 'U023BECGF' }]} }
