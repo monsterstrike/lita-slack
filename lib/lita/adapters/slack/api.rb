@@ -225,6 +225,7 @@ module Lita
           }
           if stubs
             Faraday.new do |faraday|
+              faraday.request :url_encoded
               faraday.request :retry, retry_options
               faraday.adapter(:test, stubs)
             end
@@ -234,6 +235,7 @@ module Lita
               options = { proxy: config.proxy }
             end
             Faraday.new(options) do |faraday|
+              faraday.request :url_encoded
               faraday.request :retry, retry_options
             end
           end
