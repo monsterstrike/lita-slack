@@ -86,10 +86,9 @@ module Lita
           end
         end
 
-        def send_messages(channel, strings)
-          strings.each do |string|
-            EventLoop.defer { websocket.send(safe_payload_for(channel, string)) }
-          end
+        def ack(envelope_id)
+          payload = MultiJson.dump({envelope_id: envelope_id, payload: {}})
+          EventLoop.defer { websocket.send(payload) }
         end
 
         def shut_down
@@ -125,8 +124,17 @@ module Lita
 
         def receive_message(event)
           data = MultiJson.load(event.data)
+          return if data["retry_attempt"].to_i > 0
 
-          EventLoop.defer { MessageHandler.new(robot, robot_id, data).handle }
+          EventLoop.defer do
+            case data["type"]
+            when "events_api"
+              log.debug("Acknowledging #{data["envelope_id"]}")
+              ack(data["envelope_id"])
+              next unless data["payload"]["event"]["bot_id"].nil?
+              MessageHandler.new(robot, robot_id, data["payload"]["event"]).handle
+            end
+          end
         end
 
         def safe_payload_for(channel, string)

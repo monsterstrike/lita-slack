@@ -85,7 +85,7 @@ describe Lita::Adapters::Slack::RTMConnection, lita: true do
   end
 
   describe "#run" do
-    let(:event) { double('Event', data: '{}') }
+    let(:event) { double('Event', data: '{"type": "events_api", "payload": {"event": {}}, "envelope_id": ""}') }
     let(:message_handler) { instance_double('Lita::Adapters::Slack::MessageHandler') }
 
     it "creates the WebSocket" do
@@ -114,6 +114,8 @@ describe Lita::Adapters::Slack::RTMConnection, lita: true do
         {},
       ).and_return(message_handler)
 
+      allow(subject).to receive(:ack)
+
       expect(message_handler).to receive(:handle)
 
       # Testing private methods directly is bad, but it's difficult to get
@@ -132,35 +134,5 @@ describe Lita::Adapters::Slack::RTMConnection, lita: true do
       end
     end
 
-  end
-
-  describe "#send_messages" do
-    let(:message_json) { MultiJson.dump(id: 1, type: 'message', text: 'hi', channel: channel_id) }
-    let(:channel_id) { 'C024BE91L' }
-    let(:websocket) { instance_double("Faye::WebSocket::Client") }
-
-    before do
-      # TODO: Don't stub what you don't own!
-      allow(Faye::WebSocket::Client).to receive(:new).and_return(websocket)
-      allow(websocket).to receive(:on)
-      allow(websocket).to receive(:close)
-      allow(Lita::Adapters::Slack::EventLoop).to receive(:defer).and_yield
-    end
-
-    it "writes messages to the WebSocket" do
-      with_websocket(subject, queue) do |websocket|
-        expect(websocket).to receive(:send).with(message_json)
-
-        subject.send_messages(channel_id, ['hi'])
-      end
-    end
-
-    it "raises an ArgumentError if the payload is too large" do
-      with_websocket(subject, queue) do |websocket|
-        expect do
-          subject.send_messages(channel_id, ['x' * 16_001])
-        end.to raise_error(ArgumentError)
-      end
-    end
   end
 end
