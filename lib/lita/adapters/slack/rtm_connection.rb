@@ -131,7 +131,7 @@ module Lita
             when "events_api"
               log.debug("Acknowledging #{data["envelope_id"]}")
               ack(data["envelope_id"])
-              MessageHandler.new(robot, robot_id, data["payload"]["event"]).handle
+              MessageHandler.new(robot, robot_id, data["payload"]["event"], API.new(config)).handle
             end
           end
         end

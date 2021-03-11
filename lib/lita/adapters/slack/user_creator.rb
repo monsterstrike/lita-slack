@@ -11,7 +11,7 @@ module Lita
             }
 
             is_bot = slack_user.raw_data["is_bot"]
-            metadata.merge!(is_bot: is_bot) if is_bot
+            metadata.merge!(is_bot: is_bot)
 
             User.create(
               slack_user.id,
@@ -20,6 +20,14 @@ module Lita
 
             update_robot(robot, slack_user) if slack_user.id == robot_id
             robot.trigger(:slack_user_created, slack_user: slack_user)
+          end
+
+          def create_from_api(slack_user, robot, robot_id, api)
+            Lita.logger.debug("called UserCreator#create_from_api #{slack_user}")
+            user = api.users_profile_get(slack_user)
+            create_user(SlackUser.from_data(user), robot, robot_id)
+            lita_user = User.find_by_id(slack_user)
+            lita_user
           end
 
           def create_users(slack_users, robot, robot_id)

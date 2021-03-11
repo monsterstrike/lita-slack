@@ -3,16 +3,17 @@ module Lita
     class Slack < Adapter
       # @api private
       class MessageHandler
-        def initialize(robot, robot_id, data)
+        def initialize(robot, robot_id, data, slack_api)
           @robot = robot
           @robot_id = robot_id
           @data = data
           @type = data["type"]
+          @slack_api = slack_api
         end
 
 
         def handle
-          return unless from_bot?
+          return if from_bot?
           case type
           when "hello"
             handle_hello
@@ -39,9 +40,11 @@ module Lita
         attr_reader :robot
         attr_reader :robot_id
         attr_reader :type
+        attr_reader :slack_api
 
         def from_bot?
-          User.find_by_id(data["user"]).metadata["is_bot"]
+          u = get_user(data["user"])
+          u.metadata["is_bot"] == "true"
         end
 
         def body
@@ -169,11 +172,17 @@ module Lita
           robot.trigger(:connected)
         end
 
+        def get_user(user_id)
+          user = User.find_by_id(user_id)
+          return user if user
+          UserCreator.create_from_api(data["user"], robot, robot_id, slack_api)
+        end
+
         def handle_message
           return unless supported_subtype?
           return if data["user"] == 'USLACKBOT'
 
-          user = User.find_by_id(data["user"]) || User.create(data["user"])
+          user = get_user(data["user"])
 
           return if from_self?(user)
 
@@ -194,13 +203,13 @@ module Lita
           log.debug "#{type} event received from Slack"
 
           # find or create user
-          user = User.find_by_id(data["user"]) || User.create(data["user"])
+          user = get_user(data["user"])
 
           # avoid processing reactions added/removed by self
           return if from_self?(user)
 
           # find or create item_user
-          item_user = User.find_by_id(data["item_user"]) || User.create(data["item_user"])
+          item_user = get_user(data["item_user"])
 
           # build a payload following slack convention for reactions
           payload = {
