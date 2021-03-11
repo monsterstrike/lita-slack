@@ -6,7 +6,6 @@ describe Lita::Adapters::Slack::MessageHandler, lita: true do
   before do
     allow(robot).to receive(:trigger)
     Lita::Adapters::Slack::RoomCreator.create_room(channel, robot)
-    allow_any_instance_of(Lita::Adapters::Slack::MessageHandler).to receive(:from_bot?).and_return(true)
   end
 
   let(:robot) { instance_double('Lita::Robot', name: 'Lita', mention_name: 'lita') }

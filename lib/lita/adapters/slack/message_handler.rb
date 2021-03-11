@@ -10,9 +10,7 @@ module Lita
           @type = data["type"]
         end
 
-
         def handle
-          return unless from_bot?
           case type
           when "hello"
             handle_hello
@@ -39,10 +37,6 @@ module Lita
         attr_reader :robot
         attr_reader :robot_id
         attr_reader :type
-
-        def from_bot?
-          User.find_by_id(data["user"]).metadata["is_bot"]
-        end
 
         def body
           normalized_text = nil

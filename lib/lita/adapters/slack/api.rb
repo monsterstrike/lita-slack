@@ -225,8 +225,7 @@ module Lita
           }
           if stubs
             Faraday.new do |faraday|
-              # test stubs with not URL encoded form-parameters and passing it
-              # faraday.request :url_encoded
+              faraday.request :url_encoded
               faraday.request :retry, retry_options
               faraday.adapter(:test, stubs)
             end
