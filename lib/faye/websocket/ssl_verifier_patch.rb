@@ -5,9 +5,11 @@ module SslVerifierPatch
     certificate = parse_cert(cert_text)
     return false unless certificate
 
-    # do not verify due to cross chain certificate is expired (e.g. LE - DST Root X3)
-
-    store_cert(certificate)
+    # check due to cross chain certificate is expired (e.g. LE - DST Root X3)
+    # if not expired, pass to store
+    if @cert_store.verify(certificate)
+      store_cert(certificate)
+    end
     @last_cert = certificate
 
     true
