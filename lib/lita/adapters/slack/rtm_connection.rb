@@ -1,4 +1,5 @@
 require 'faye/websocket'
+require 'faye/websocket/ssl_verifier_patch'
 require 'multi_json'
 
 require 'lita/adapters/slack/api'
@@ -150,6 +151,7 @@ module Lita
         def websocket_options
           options = { ping: 10 }
           options[:proxy] = { :origin => config.proxy } if config.proxy
+          options[:tls] = { :root_ca_dir => config.root_ca_dir } if config.root_ca_dir
           options
         end
 
