@@ -10,6 +10,7 @@ module Lita
       config :token, type: String, required: true
       config :app_token, type: String, required: true
       config :proxy, type: String
+      config :root_ca_file, type: String
       config :parse, type: [String]
       config :link_names, type: [true, false]
       config :unfurl_links, type: [true, false]
