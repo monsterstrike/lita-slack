@@ -9,8 +9,8 @@ module SslVerifierPatch
     # if not expired, pass to store
     if @cert_store.verify(certificate)
       store_cert(certificate)
+      @last_cert = certificate
     end
-    @last_cert = certificate
 
     true
   end
