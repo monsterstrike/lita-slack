@@ -17,6 +17,14 @@ module SslVerifierPatch
     # verify last cert is valid (e.g. ISRG Root)
     @cert_store.verify(@last_cert) && (@last_cert and OpenSSL::SSL.verify_certificate_identity(@last_cert, @hostname))
   end
+
+  def ssl_handshake_completed
+    return unless should_verify?
+
+    unless identity_verified?
+      raise Faye::WebSocket::SSLError, "@cert_store.verify(@last_cert) => #{@cert_store.verify(@last_cert)}, OpenSSL::SSL.verify_certificate_identity(@last_cert, @hostname)) => #{OpenSSL::SSL.verify_certificate_identity(@last_cert, @hostname)}, cert => #{@last_cert}"
+    end
+  end
 end
 
 Faye::WebSocket::SslVerifier.prepend(SslVerifierPatch)
