@@ -1,4 +1,5 @@
 require 'faye/websocket'
+require 'faye/websocket/ssl_verifier_patch'
 require 'multi_json'
 
 require 'lita/adapters/slack/api'
