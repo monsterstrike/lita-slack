@@ -1,4 +1,15 @@
 module SslVerifierPatch
+  def initialize(hostname, ssl_opts)
+    @hostname   = hostname
+    @ssl_opts   = ssl_opts
+    @cert_store = OpenSSL::X509::Store.new
+
+    if root = @ssl_opts[:root_ca_dir]
+      [root].flatten.each { |ca_path| @cert_store.add_path(ca_path) }
+    else
+      @cert_store.set_default_paths
+    end
+  end
   def ssl_verify_peer(cert_text)
     return true unless should_verify?
 
