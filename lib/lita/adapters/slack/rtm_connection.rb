@@ -151,6 +151,7 @@ module Lita
         def websocket_options
           options = { ping: 10 }
           options[:proxy] = { :origin => config.proxy } if config.proxy
+          options[:tls] = { :root_ca_file => config.root_cert_file } if config.root_cert_file
           options
         end
 
