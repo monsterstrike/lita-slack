@@ -124,7 +124,8 @@ module Lita
         end
 
         def receive_message(event)
-          data = MultiJson.load(event.data)
+          data = event.data
+          data = MultiJson.load(event.data) unless data.is_a?(Hash)
           return if data["retry_attempt"].to_i > 0
 
           EventLoop.defer do
