@@ -72,7 +72,8 @@ module Lita
           call_paginated_api(method: 'conversations.list', params: params, result_field: 'channels')
         end
 
-        def call_paginated_api(method:, params:, result_field:)
+        def call_paginated_api(method:, params:, result_field:, limit: 1000)
+          params.merge!({limit: limit})
           result = call_api(
             method,
             params
